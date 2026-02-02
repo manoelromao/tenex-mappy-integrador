@@ -1,57 +1,52 @@
+import express from 'express';
+import axios from 'axios';
+
+const app = express();
+
+// 🔴 ISSO TEM QUE VIR ANTES DAS ROTAS
+app.use(express.json());
+
+// ✅ ROTA DE SAÚDE
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
-
-import express from 'express';
-import axios from 'axios';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const app = express();
-app.use(express.json());
-
-const {
-  PORT,
-  MAPPY_BASE_URL,
-  MAPPY_TOKEN
-} = process.env;
-
-// Webhook TENEX → MAPPY
+// ✅ WEBHOOK TENEX
 app.post('/webhook/tenex/clientes', async (req, res) => {
   try {
-    const tenex = req.body;
+    console.log('Webhook recebido:', req.body);
 
-    // MAPEAMENTO SIMPLES
     const paciente = {
-      name: tenex.nome,
-      cpf: tenex.cpf,
-      email: tenex.email,
-      phone: tenex.telefone
+      name: req.body.nome,
+      cpf: req.body.cpf,
+      birth_date: req.body['data nascimento'],
+      gender: req.body.genero,
+      address: req.body.endereco,
+      address_number: req.body.numero,
+      city: req.body.cidade,
+      state: req.body.estado,
+      zip_code: req.body.cep
     };
 
     await axios.post(
-      `${MAPPY_BASE_URL}/patients`,
+      `${process.env.MAPPY_BASE_URL}/patients`,
       paciente,
       {
         headers: {
-          Authorization: `Bearer ${MAPPY_TOKEN}`
+          Authorization: `Bearer ${process.env.MAPPY_TOKEN}`
         }
       }
     );
 
-    console.log('Paciente criado:', paciente.cpf);
     res.status(200).send('OK');
   } catch (error) {
-    console.error(
-      error.response?.data || error.message
-    );
-    res.status(500).send('ERRO');
+    console.error('Erro no webhook:', error.response?.data || error.message);
+    res.status(500).send('Erro interno');
   }
 });
 
+// 🔊 START DO SERVIDOR (OBRIGATÓRIO NO RENDER)
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`Integrador rodando na porta ${PORT}`);
 });
-
