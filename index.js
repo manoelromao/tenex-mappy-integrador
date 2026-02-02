@@ -1,3 +1,8 @@
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+
 import express from 'express';
 import axios from 'axios';
 import dotenv from 'dotenv';
@@ -49,3 +54,4 @@ app.post('/webhook/tenex/clientes', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Integrador rodando na porta ${PORT}`);
 });
+
